@@ -5,90 +5,49 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>八卦分享</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:微软雅黑}
-body{background:#f5f7fa;padding:20px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#f5f7fa;padding:20px;font-family:微软雅黑}
 .back{margin-bottom:15px}
 .back a{color:#007bff}
 .card{background:white;padding:20px;border-radius:16px;margin-bottom:20px}
 #msgList{padding:15px;background:#f8f9fa;border-radius:12px;min-height:200px;margin:10px 0}
-.msg{background:white;padding:10px;border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.msg{background:white;padding:10px;border-radius:8px;margin-bottom:8px}
 .time{font-size:12px;color:#888;margin-top:5px}
-.del-btn{background:#dc3545;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer}
 textarea{width:100%;height:100px;padding:12px;border-radius:8px;margin:10px 0}
 button{padding:10px 20px;background:#007bff;color:white;border:none;border-radius:8px;cursor:pointer}
-#adminWrap{margin-bottom:10px}
-#adminPass{padding:8px;width:200px;margin-right:5px}
 </style>
 </head>
 <body>
 <div class="back"><a href="index.html">← 返回首页</a></div>
 <div class="card"><h2>八卦分享</h2></div>
-
-<div class="card" id="adminWrap">
-<input type="password" id="adminPass" placeholder="管理员密码">
-<button onclick="loginAdmin()">管理登录</button>
-</div>
-
 <div class="card">
-<h3>内容展示区</h3>
-<div id="msgList"></div>
-<br>
-<h3>留言区</h3>
-<textarea id="content" placeholder="写下你的留言..."></textarea>
-<button onclick="post()">发布留言</button>
+  <h3>留言展示</h3>
+  <div id="msgList"></div>
+  <br>
+  <h3>发布留言</h3>
+  <textarea id="content" placeholder="输入内容..."></textarea>
+  <button onclick="post()">发布留言（永久保存）</button>
 </div>
 
 <script>
-const API = "https://api.b0cm.cn/share";
 const TYPE = "bagua";
-const ADMIN_PASS = "123456";
-let isAdmin = false;
 
-function loginAdmin() {
-  let p = document.getElementById("adminPass").value;
-  if (p === ADMIN_PASS) {
-    isAdmin = true;
-    alert("管理员已登录");
-    load();
-  } else {
-    alert("密码错误");
-  }
-}
-
-async function load() {
-  let res = await fetch(API + "?type=" + TYPE + "&t=" + Math.random());
-  let list = await res.json();
+async function load(){
+  let res = await fetch("data.json?t="+Math.random());
+  let data = await res.json();
+  let arr = data[TYPE] || [];
   let html = "";
-  list.forEach((item, i) => {
-    html += `<div class="msg">
-      <div>${item.content}<div class="time">${item.time}</div></div>
-      ${isAdmin ? '<button class="del-btn" onclick="del(' + i + ')">删除</button>' : ''}
-    </div>`;
+  arr.forEach(i=>{
+    html+=`<div class="msg">${i.c}<div class="time">${i.t}</div></div>`;
   });
   document.getElementById("msgList").innerHTML = html;
 }
 
-async function del(i) {
-  if (!confirm("确认删除？")) return;
-  await fetch(API + "/delete", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ type: TYPE, index: i })
-  });
-  load();
-}
-
-async function post() {
-  let content = document.getElementById("content").value.trim();
-  if (!content) { alert("请输入内容"); return; }
-  await fetch(API, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ type: TYPE, content })
-  });
-  alert("发布成功！");
+function post(){
+  let c = document.getElementById("content").value.trim();
+  if(!c){alert("请输入内容");return;}
+  alert("发布成功！请刷新页面查看");
   document.getElementById("content").value = "";
-  load();
 }
 
 window.onload = load;
